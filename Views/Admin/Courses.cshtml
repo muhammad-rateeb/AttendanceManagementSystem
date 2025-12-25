@@ -1,0 +1,92 @@
+@model List<CourseViewModel>
+@{
+    ViewData["Title"] = "Manage Courses";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-book me-2"></i>Course Management</h2>
+    <a asp-action="CreateCourse" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>Add New Course
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Name</th>
+                            <th>Credit Hours</th>
+                            <th>Semester</th>
+                            <th>Students</th>
+                            <th>Teachers</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var course in Model)
+                        {
+                            <tr class="@(course.IsActive ? "" : "table-secondary")">
+                                <td><span class="badge bg-secondary">@course.CourseCode</span></td>
+                                <td>@course.CourseName</td>
+                                <td>@course.CreditHours</td>
+                                <td>@course.Semester @course.AcademicYear</td>
+                                <td><span class="badge bg-info">@course.EnrolledStudentsCount</span></td>
+                                <td><span class="badge bg-primary">@course.TeachersCount</span></td>
+                                <td>
+                                    @if (course.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="EditCourse" asp-route-id="@course.CourseId" 
+                                           class="btn btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="AssignTeacher" asp-route-courseId="@course.CourseId" 
+                                           class="btn btn-outline-success">
+                                            <i class="bi bi-person-plus"></i>
+                                        </a>
+                                        @if (course.IsActive)
+                                        {
+                                            <form asp-action="DeleteCourse" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@course.CourseId" />
+                                                <button type="submit" class="btn btn-outline-danger" 
+                                                        onclick="return confirm('Are you sure you want to delete this course?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-book text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3">No Courses Found</h4>
+                <p class="text-muted">Get started by adding your first course.</p>
+                <a asp-action="CreateCourse" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Add New Course
+                </a>
+            </div>
+        }
+    </div>
+</div>

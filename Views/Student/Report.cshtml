@@ -1,0 +1,169 @@
+@model AttendanceManagementSystem.Models.ViewModels.DetailedStudentReportViewModel
+@{
+    ViewData["Title"] = "My Attendance Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-file-earmark-bar-graph me-2"></i>My Attendance Report</h2>
+    <div>
+        <a asp-action="ExportReport" asp-route-format="excel" class="btn btn-success me-2">
+            <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+        </a>
+        <a asp-action="ExportReport" asp-route-format="pdf" class="btn btn-danger me-2">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+        </a>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-person me-2"></i>Student Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <strong>Name:</strong> @Model.StudentName
+            </div>
+            <div class="col-md-4">
+                <strong>Registration No:</strong> @Model.RegistrationNumber
+            </div>
+            <div class="col-md-4">
+                <strong>Email:</strong> @Model.Email
+            </div>
+        </div>
+        <hr />
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="border rounded p-3">
+                    <h3 class="text-primary">@Model.CourseReports.Count</h3>
+                    <small class="text-muted">Enrolled Courses</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded p-3">
+                    <h3 class="@(Model.OverallAttendancePercentage >= 75 ? "text-success" : Model.OverallAttendancePercentage >= 50 ? "text-warning" : "text-danger")">
+                        @Model.OverallAttendancePercentage.ToString("0.0")%
+                    </h3>
+                    <small class="text-muted">Overall Attendance</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded p-3">
+                    <h3 class="text-info">@Model.CourseReports.Sum(c => c.TotalClasses)</h3>
+                    <small class="text-muted">Total Classes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.CourseReports.Any())
+{
+    @foreach (var course in Model.CourseReports)
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">
+                        <span class="badge bg-secondary me-2">@course.CourseCode</span>
+                        @course.CourseName
+                    </h5>
+                    <small class="text-muted">Teacher: @course.TeacherName</small>
+                </div>
+                <div class="text-end">
+                    @if (course.AttendancePercentage >= 75)
+                    {
+                        <span class="badge bg-success fs-6">@course.AttendancePercentage.ToString("0.0")%</span>
+                    }
+                    else if (course.AttendancePercentage >= 50)
+                    {
+                        <span class="badge bg-warning text-dark fs-6">@course.AttendancePercentage.ToString("0.0")%</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger fs-6">@course.AttendancePercentage.ToString("0.0")%</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 text-center">
+                        <span class="badge bg-secondary p-2">Total: @course.TotalClasses</span>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <span class="badge bg-success p-2">Present: @course.PresentCount</span>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <span class="badge bg-danger p-2">Absent: @course.AbsentCount</span>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <span class="badge bg-warning text-dark p-2">Late: @course.LateCount</span>
+                    </div>
+                </div>
+
+                <div class="progress mb-3" style="height: 20px;">
+                    @{
+                        var presentPct = course.TotalClasses > 0 ? (course.PresentCount * 100.0 / course.TotalClasses) : 0;
+                        var absentPct = course.TotalClasses > 0 ? (course.AbsentCount * 100.0 / course.TotalClasses) : 0;
+                        var latePct = course.TotalClasses > 0 ? (course.LateCount * 100.0 / course.TotalClasses) : 0;
+                    }
+                    <div class="progress-bar bg-success" style="width: @presentPct%"></div>
+                    <div class="progress-bar bg-danger" style="width: @absentPct%"></div>
+                    <div class="progress-bar bg-warning" style="width: @latePct%"></div>
+                </div>
+
+                @if (course.DailyAttendance.Any())
+                {
+                    <details>
+                        <summary class="btn btn-sm btn-outline-primary mb-2">
+                            <i class="bi bi-calendar3 me-1"></i>View Daily Attendance (@course.DailyAttendance.Count records)
+                        </summary>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var record in course.DailyAttendance.OrderByDescending(d => d.Date))
+                                    {
+                                        <tr>
+                                            <td>@record.Date.ToString("dd-MMM-yyyy")</td>
+                                            <td>
+                                                @if (record.StatusDisplay == "Present")
+                                                {
+                                                    <span class="badge bg-success">@record.StatusDisplay</span>
+                                                }
+                                                else if (record.StatusDisplay == "Absent")
+                                                {
+                                                    <span class="badge bg-danger">@record.StatusDisplay</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">@record.StatusDisplay</span>
+                                                }
+                                            </td>
+                                            <td>@(record.Remarks ?? "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                }
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>No attendance records found. Please enroll in courses first.
+    </div>
+}

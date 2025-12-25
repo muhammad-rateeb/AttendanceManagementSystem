@@ -1,0 +1,116 @@
+@model CourseDetailedReport
+@{
+    ViewData["Title"] = "Attendance Details";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-calendar-check me-2"></i>@Model.CourseName</h2>
+        <p class="text-muted mb-0">
+            <span class="badge bg-secondary">@Model.CourseCode</span>
+            <span class="ms-2">Teacher: @Model.TeacherName</span>
+        </p>
+    </div>
+    <a asp-action="Attendance" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Attendance
+    </a>
+</div>
+
+<!-- Summary Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-2">
+                <div class="border rounded p-3">
+                    <h3 class="mb-0 text-primary">@Model.TotalClasses</h3>
+                    <small class="text-muted">Total Classes</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="border rounded p-3">
+                    <h3 class="mb-0 text-success">@Model.PresentCount</h3>
+                    <small class="text-muted">Present</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="border rounded p-3">
+                    <h3 class="mb-0 text-danger">@Model.AbsentCount</h3>
+                    <small class="text-muted">Absent</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="border rounded p-3">
+                    <h3 class="mb-0 text-warning">@Model.LateCount</h3>
+                    <small class="text-muted">Late</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="border rounded p-3 @(Model.AttendancePercentage >= 75 ? "border-success" : Model.AttendancePercentage >= 50 ? "border-warning" : "border-danger")">
+                    <h3 class="mb-0 @(Model.AttendancePercentage >= 75 ? "text-success" : Model.AttendancePercentage >= 50 ? "text-warning" : "text-danger")">
+                        @Model.AttendancePercentage%
+                    </h3>
+                    <small class="text-muted">Attendance Percentage</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance History -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Complete Attendance History</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.DailyAttendance.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var count = 1; }
+                        @foreach (var record in Model.DailyAttendance.OrderByDescending(a => a.Date))
+                        {
+                            <tr>
+                                <td>@count</td>
+                                <td>@record.Date.ToString("MMM dd, yyyy")</td>
+                                <td>@record.Date.ToString("dddd")</td>
+                                <td>
+                                    @if (record.Status == AttendanceStatus.Present)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Present</span>
+                                    }
+                                    else if (record.Status == AttendanceStatus.Absent)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-x-lg me-1"></i>Absent</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning"><i class="bi bi-clock me-1"></i>Late</span>
+                                    }
+                                </td>
+                                <td>@(record.Remarks ?? "-")</td>
+                            </tr>
+                            count++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">No attendance records found for this course.</p>
+            </div>
+        }
+    </div>
+</div>

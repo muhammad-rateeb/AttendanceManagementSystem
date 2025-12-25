@@ -1,0 +1,99 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people me-2"></i>User Management</h2>
+    <a asp-action="CreateUser" class="btn btn-primary">
+        <i class="bi bi-person-plus me-2"></i>Add New User
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white rounded-circle me-2" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        @(user.FirstName.ToString()[0])@(user.LastName.ToString()[0])
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">@user.FirstName @user.LastName</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@user.Email</td>
+                            <td>
+                                @{
+                                    var role = user.Role.ToString();
+                                    var badgeClass = role == "Admin" ? "bg-danger" : role == "Teacher" ? "bg-primary" : "bg-success";
+                                }
+                                <span class="badge @badgeClass">@role</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty((string)user.RegistrationNumber))
+                                {
+                                    <code>@user.RegistrationNumber</code>
+                                }
+                                else if (!string.IsNullOrEmpty((string)user.EmployeeId))
+                                {
+                                    <code>@user.EmployeeId</code>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="ToggleUserStatus" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    @if (user.IsActive)
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('Are you sure you want to deactivate this user?');">
+                                            <i class="bi bi-x-circle"></i> Deactivate
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-check-circle"></i> Activate
+                                        </button>
+                                    }
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

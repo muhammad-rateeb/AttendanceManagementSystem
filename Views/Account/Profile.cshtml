@@ -1,0 +1,75 @@
+@model ApplicationUser
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-person-circle me-2"></i>My Profile</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4">
+                        <div class="bg-primary text-white rounded-circle mx-auto mb-3" 
+                             style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                            @Model.FirstName[0]@Model.LastName[0]
+                        </div>
+                        <h4>@Model.FullName</h4>
+                        <span class="badge bg-@(ViewData["Role"]?.ToString() == "Admin" ? "danger" : ViewData["Role"]?.ToString() == "Teacher" ? "primary" : "success") fs-6">
+                            @ViewData["Role"]
+                        </span>
+                    </div>
+                    <div class="col-md-8">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 40%;"><i class="bi bi-envelope me-2"></i>Email</th>
+                                    <td>@Model.Email</td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.RegistrationNumber))
+                                {
+                                    <tr>
+                                        <th><i class="bi bi-person-badge me-2"></i>Registration Number</th>
+                                        <td>@Model.RegistrationNumber</td>
+                                    </tr>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.EmployeeId))
+                                {
+                                    <tr>
+                                        <th><i class="bi bi-person-vcard me-2"></i>Employee ID</th>
+                                        <td>@Model.EmployeeId</td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <th><i class="bi bi-calendar me-2"></i>Member Since</th>
+                                    <td>@Model.CreatedAt.ToString("MMMM dd, yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <th><i class="bi bi-check-circle me-2"></i>Status</th>
+                                    <td>
+                                        @if (Model.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inactive</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="mt-4">
+                            <a asp-action="ChangePassword" class="btn btn-outline-primary">
+                                <i class="bi bi-key me-2"></i>Change Password
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,119 @@
+@model DailyAttendanceViewModel
+@{
+    ViewData["Title"] = "View Attendance";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-calendar-check me-2"></i>View Attendance</h2>
+        <p class="text-muted mb-0">@Model.CourseName</p>
+    </div>
+    <a asp-action="MyCourses" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Courses
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>@Model.TotalStudents</h3>
+                <small>Total Students</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>@Model.PresentCount</h3>
+                <small>Present</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3>@Model.AbsentCount</h3>
+                <small>Absent</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>@Model.LateCount</h3>
+                <small>Late</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-calendar me-2"></i>@Model.Date.ToString("dddd, MMMM dd, yyyy")
+        </h5>
+        <div>
+            <a asp-action="MarkAttendance" asp-route-courseId="@Model.CourseId" asp-route-date="@Model.Date.ToString("yyyy-MM-dd")" 
+               class="btn btn-sm btn-primary">
+                <i class="bi bi-pencil me-1"></i>Edit Attendance
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.StudentRecords.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Reg. No.</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var count = 1; }
+                        @foreach (var record in Model.StudentRecords)
+                        {
+                            <tr>
+                                <td>@count</td>
+                                <td><code>@record.RegistrationNumber</code></td>
+                                <td>@record.StudentName</td>
+                                <td>
+                                    @if (record.Status == AttendanceStatus.Present)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Present</span>
+                                    }
+                                    else if (record.Status == AttendanceStatus.Absent)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-x-lg me-1"></i>Absent</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning"><i class="bi bi-clock me-1"></i>Late</span>
+                                    }
+                                </td>
+                                <td>@(record.Remarks ?? "-")</td>
+                            </tr>
+                            count++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">No attendance records for this date.</p>
+                <a asp-action="MarkAttendance" asp-route-courseId="@Model.CourseId" asp-route-date="@Model.Date.ToString("yyyy-MM-dd")" 
+                   class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Mark Attendance
+                </a>
+            </div>
+        }
+    </div>
+</div>

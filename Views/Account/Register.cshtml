@@ -1,0 +1,125 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0"><i class="bi bi-person-plus me-2"></i>Create Account</h4>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Register" method="post" id="registerForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="First Name" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Last Name" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control" placeholder="email@example.com" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label"></label>
+                        <select asp-for="Role" class="form-select" id="roleSelect">
+                            <option value="">-- Select Role --</option>
+                            <option value="Student">Student</option>
+                            <option value="Teacher">Teacher</option>
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3" id="registrationNumberDiv" style="display: none;">
+                        <label asp-for="RegistrationNumber" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                            <input asp-for="RegistrationNumber" class="form-control" placeholder="e.g., 2021-CS-001" />
+                        </div>
+                        <span asp-validation-for="RegistrationNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3" id="employeeIdDiv" style="display: none;">
+                        <label asp-for="EmployeeId" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person-vcard"></i></span>
+                            <input asp-for="EmployeeId" class="form-control" placeholder="e.g., TCH001" />
+                        </div>
+                        <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input asp-for="Password" class="form-control" placeholder="Create a strong password" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <small class="text-muted">
+                            Must be at least 8 characters with uppercase, lowercase, number, and special character.
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm your password" />
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <hr />
+
+                <div class="text-center">
+                    <p class="mb-0">Already have an account?</p>
+                    <a asp-action="Login" class="btn btn-outline-primary mt-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            var role = this.value;
+            var regDiv = document.getElementById('registrationNumberDiv');
+            var empDiv = document.getElementById('employeeIdDiv');
+            
+            regDiv.style.display = 'none';
+            empDiv.style.display = 'none';
+            
+            if (role === 'Student') {
+                regDiv.style.display = 'block';
+            } else if (role === 'Teacher') {
+                empDiv.style.display = 'block';
+            }
+        });
+    </script>
+}

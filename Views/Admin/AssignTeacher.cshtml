@@ -1,0 +1,96 @@
+@model IList<ApplicationUser>
+@{
+    ViewData["Title"] = "Assign Teacher";
+    var course = ViewData["Course"] as Course;
+    var assignedTeacherIds = ViewData["AssignedTeacherIds"] as List<string>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-person-plus me-2"></i>Assign Teacher</h2>
+        <p class="text-muted mb-0">
+            <span class="badge bg-secondary">@course?.CourseCode</span> @course?.CourseName
+        </p>
+    </div>
+    <a asp-action="Courses" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Courses
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Assigned Teachers</h5>
+            </div>
+            <div class="card-body">
+                @if (assignedTeacherIds?.Any() == true)
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var teacher in Model.Where(t => assignedTeacherIds.Contains(t.Id)))
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@teacher.FullName</strong>
+                                    <br><small class="text-muted">@teacher.Email</small>
+                                </div>
+                                <form asp-action="RemoveTeacher" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="courseId" value="@course?.CourseId" />
+                                    <input type="hidden" name="teacherId" value="@teacher.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                            onclick="return confirm('Remove this teacher from the course?');">
+                                        <i class="bi bi-x-circle"></i> Remove
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-center text-muted py-3">No teachers assigned yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Available Teachers</h5>
+            </div>
+            <div class="card-body">
+                @{
+                    var availableTeachers = Model.Where(t => assignedTeacherIds?.Contains(t.Id) != true).ToList();
+                }
+                @if (availableTeachers.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var teacher in availableTeachers)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>@teacher.FullName</strong>
+                                    <br><small class="text-muted">@teacher.Email</small>
+                                </div>
+                                <form asp-action="AssignTeacher" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="courseId" value="@course?.CourseId" />
+                                    <input type="hidden" name="teacherId" value="@teacher.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-plus-lg"></i> Assign
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-center text-muted py-3">All teachers are already assigned.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

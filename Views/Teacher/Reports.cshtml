@@ -1,0 +1,172 @@
+@model AttendanceReportViewModel
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-graph-up me-2"></i>Attendance Reports</h2>
+    <div>
+        <a asp-action="ExportReport" asp-route-format="excel" 
+           asp-route-courseId="@Model.Filter.CourseId"
+           asp-route-startDate="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")"
+           asp-route-endDate="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")"
+           class="btn btn-success me-2">
+            <i class="bi bi-file-earmark-excel me-2"></i>Export Excel
+        </a>
+        <a asp-action="ExportReport" asp-route-format="pdf" 
+           asp-route-courseId="@Model.Filter.CourseId"
+           asp-route-startDate="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")"
+           asp-route-endDate="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")"
+           class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Export PDF
+        </a>
+    </div>
+</div>
+
+<!-- Filter Form -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filters</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="Reports" method="get">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Course</label>
+                    <select name="CourseId" class="form-select">
+                        <option value="">All Courses</option>
+                        @foreach (var course in Model.AvailableCourses)
+                        {
+                            <option value="@course.CourseId" selected="@(Model.Filter.CourseId == course.CourseId)">
+                                @course.DisplayName
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="StartDate" class="form-control" 
+                           value="@Model.Filter.StartDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="EndDate" class="form-control" 
+                           value="@Model.Filter.EndDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-2"></i>Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <h3>@Model.Summary.TotalStudents</h3>
+                <small>Total Students</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <h3>@Model.Summary.TotalCourses</h3>
+                <small>Courses</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <h3>@Model.Summary.OverallAverageAttendance%</h3>
+                <small>Average Attendance</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body text-center">
+                <h3>@Model.Summary.StudentsWithPoorAttendance</h3>
+                <small>Low Attendance</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Reports Table -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Student Attendance Details</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.StudentReports.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Reg. No.</th>
+                            <th>Student Name</th>
+                            <th>Course</th>
+                            <th>Total</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Late</th>
+                            <th>Attendance %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in Model.StudentReports)
+                        {
+                            <tr>
+                                <td><code>@report.RegistrationNumber</code></td>
+                                <td>@report.StudentName</td>
+                                <td><span class="badge bg-secondary">@report.CourseCode</span></td>
+                                <td>@report.TotalClasses</td>
+                                <td class="text-success">@report.PresentCount</td>
+                                <td class="text-danger">@report.AbsentCount</td>
+                                <td class="text-warning">@report.LateCount</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @(report.AttendancePercentage >= 75 ? "bg-success" : report.AttendancePercentage >= 50 ? "bg-warning" : "bg-danger")" 
+                                             style="width: @report.AttendancePercentage%">
+                                            @report.AttendancePercentage%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (report.AttendanceStatus == "Good")
+                                    {
+                                        <span class="badge bg-success">Good</span>
+                                    }
+                                    else if (report.AttendanceStatus == "Warning")
+                                    {
+                                        <span class="badge bg-warning">Warning</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Critical</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-graph-up text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">No data found for the selected filters.</p>
+            </div>
+        }
+    </div>
+</div>

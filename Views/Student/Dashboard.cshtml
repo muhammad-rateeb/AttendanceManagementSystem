@@ -1,0 +1,175 @@
+@model StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Student Dashboard</h2>
+    <div>
+        <span class="text-muted">Welcome, @Model.StudentName</span>
+        <span class="badge bg-secondary ms-2">@Model.RegistrationNumber</span>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Enrolled Courses</h6>
+                        <h2 class="mb-0">@Model.EnrolledCourses.Count</h2>
+                    </div>
+                    <i class="bi bi-book fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card @(Model.OverallAttendancePercentage >= 75 ? "bg-success" : Model.OverallAttendancePercentage >= 50 ? "bg-warning" : "bg-danger") text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Overall Attendance</h6>
+                        <h2 class="mb-0">@Model.OverallAttendancePercentage%</h2>
+                    </div>
+                    <i class="bi bi-pie-chart fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Today's Status</h6>
+                        <h2 class="mb-0">
+                            @if (Model.TodaysStatus.HasValue)
+                            {
+                                @Model.TodaysStatus.Value.ToString()
+                            }
+                            else
+                            {
+                                <span>Not Marked</span>
+                            }
+                        </h2>
+                    </div>
+                    <i class="bi bi-calendar-check fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Course Attendance Summary -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Course-wise Attendance</h5>
+        <a asp-action="Attendance" class="btn btn-sm btn-outline-primary">View Details</a>
+    </div>
+    <div class="card-body">
+        @if (Model.EnrolledCourses.Any())
+        {
+            <div class="row g-4">
+                @foreach (var course in Model.EnrolledCourses)
+                {
+                    <div class="col-md-6">
+                        <div class="card h-100 border-@(course.AttendancePercentage >= 75 ? "success" : course.AttendancePercentage >= 50 ? "warning" : "danger")">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h6 class="card-title mb-0">@course.CourseName</h6>
+                                        <small class="text-muted">@course.CourseCode</small>
+                                    </div>
+                                    <span class="badge @(course.AttendancePercentage >= 75 ? "bg-success" : course.AttendancePercentage >= 50 ? "bg-warning" : "bg-danger") fs-6">
+                                        @course.AttendancePercentage%
+                                    </span>
+                                </div>
+                                
+                                <div class="progress mb-3" style="height: 8px;">
+                                    <div class="progress-bar @(course.AttendancePercentage >= 75 ? "bg-success" : course.AttendancePercentage >= 50 ? "bg-warning" : "bg-danger")" 
+                                         style="width: @course.AttendancePercentage%"></div>
+                                </div>
+
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <div class="text-success fw-bold">@course.PresentCount</div>
+                                        <small class="text-muted">Present</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-danger fw-bold">@course.AbsentCount</div>
+                                        <small class="text-muted">Absent</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-warning fw-bold">@course.LateCount</div>
+                                        <small class="text-muted">Late</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white border-0">
+                                <small class="text-muted">Total Classes: @course.TotalClasses</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-book text-muted" style="font-size: 4rem;"></i>
+                <h4 class="mt-3">No Courses Enrolled</h4>
+                <p class="text-muted">You haven't enrolled in any courses yet.</p>
+                <a asp-action="RegisterCourses" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>Register for Courses
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-action="RegisterCourses" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Register for Courses
+                    </a>
+                    <a asp-action="Report" class="btn btn-outline-info">
+                        <i class="bi bi-file-text me-2"></i>View Detailed Report
+                    </a>
+                    <a asp-action="ExportReport" asp-route-format="pdf" class="btn btn-outline-danger">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Attendance Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <span class="badge bg-success me-2">≥ 75%</span> Good Standing
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-warning me-2">50-74%</span> Warning - Improvement Needed
+                    </li>
+                    <li class="mb-0">
+                        <span class="badge bg-danger me-2">< 50%</span> Critical - May Face Shortage
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

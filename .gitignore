@@ -1,0 +1,73 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Build files
+*.csproj.user
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+nuget.exe
+packages/
+*.nuget.props
+*.nuget.targets
+
+# User-specific files
+*.userprefs
+
+# Rider
+.idea/
+*.sln.iml
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+appsettings.Development.json
+
+# Publish output
+publish/
+PublishProfiles/
+
+# Azure
+.azure/
+
+# Misc
+*.log
+*.tmp
+*.temp

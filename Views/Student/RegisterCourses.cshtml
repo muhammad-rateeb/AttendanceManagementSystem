@@ -1,0 +1,116 @@
+@model AvailableCoursesViewModel
+@{
+    ViewData["Title"] = "Register for Courses";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-plus-circle me-2"></i>Course Registration</h2>
+    <a asp-action="Dashboard" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+<!-- Currently Enrolled Courses -->
+@if (Model.EnrolledCourses.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>My Enrolled Courses (@Model.EnrolledCourses.Count)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Name</th>
+                            <th>Credit Hours</th>
+                            <th>Semester</th>
+                            <th>Teacher</th>
+                            <th>Enrolled On</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var course in Model.EnrolledCourses)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@course.CourseCode</span></td>
+                                <td>@course.CourseName</td>
+                                <td>@course.CreditHours</td>
+                                <td>@course.Semester</td>
+                                <td>@course.TeacherName</td>
+                                <td>@course.EnrollmentDate?.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <form asp-action="Unenroll" method="post" class="d-inline" 
+                                          onsubmit="return confirm('Are you sure you want to unenroll from this course?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="courseId" value="@course.CourseId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Unenroll
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Available Courses -->
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-book me-2"></i>Available Courses (@Model.AvailableCourses.Count)</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.AvailableCourses.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Name</th>
+                            <th>Credit Hours</th>
+                            <th>Semester</th>
+                            <th>Teacher</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var course in Model.AvailableCourses)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@course.CourseCode</span></td>
+                                <td>@course.CourseName</td>
+                                <td>@course.CreditHours</td>
+                                <td>@course.Semester</td>
+                                <td>@course.TeacherName</td>
+                                <td>
+                                    <form asp-action="Enroll" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="courseId" value="@course.CourseId" />
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-plus-lg me-1"></i>Enroll
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                <h4 class="mt-3">All Caught Up!</h4>
+                <p class="text-muted">You are enrolled in all available courses.</p>
+            </div>
+        }
+    </div>
+</div>
