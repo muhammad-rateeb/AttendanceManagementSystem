@@ -12,9 +12,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Database Context
+// Database Context - Use SQLite for production (Render), SQL Server for development
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var useSqlite = builder.Configuration.GetValue<bool>("UseSqlite") || 
+                Environment.GetEnvironmentVariable("USE_SQLITE") == "true";
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (useSqlite)
+    {
+        var sqliteConnection = Environment.GetEnvironmentVariable("DATABASE_URL") ?? "Data Source=attendance.db";
+        options.UseSqlite(sqliteConnection);
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // Identity Configuration
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
