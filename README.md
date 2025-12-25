@@ -113,9 +113,10 @@ AttendanceManagementSystem/
 
 ### Installation Steps
 
-1. **Clone/Extract the project**
+1. **Clone the project**
    ```bash
-   cd c:\path\to\AttendanceManagementSystem
+   git clone https://github.com/muhammad-rateeb/AttendanceManagementSystem.git
+   cd AttendanceManagementSystem
    ```
 
 2. **Restore NuGet packages**
@@ -134,7 +135,6 @@ AttendanceManagementSystem/
 
 4. **Apply database migrations**
    ```bash
-   dotnet ef migrations add InitialCreate
    dotnet ef database update
    ```
 
@@ -144,7 +144,8 @@ AttendanceManagementSystem/
    ```
 
 6. **Access the application**
-   - URL: `https://localhost:5001` or `http://localhost:5000`
+   - HTTPS: `https://localhost:54030`
+   - HTTP: `http://localhost:54031`
 
 ---
 

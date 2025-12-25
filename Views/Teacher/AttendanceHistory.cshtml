@@ -2,8 +2,8 @@
 @{
     ViewData["Title"] = "Attendance History";
     var course = ViewData["Course"] as Course;
-    var startDate = (DateTime)ViewData["StartDate"];
-    var endDate = (DateTime)ViewData["EndDate"];
+    var startDate = ViewData["StartDate"] as DateTime? ?? DateTime.Today.AddDays(-30);
+    var endDate = ViewData["EndDate"] as DateTime? ?? DateTime.Today;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
