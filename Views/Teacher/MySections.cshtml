@@ -1,0 +1,76 @@
+@model AttendanceManagementSystem.Models.ViewModels.TeacherSectionsViewModel
+@{
+    ViewData["Title"] = "My Sections";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-diagram-3 me-2"></i>My Sections</h2>
+            <p class="text-muted mb-0">@Model.TeacherName</p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    @if (!Model.Sections.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No sections assigned yet. Sections will appear here once timetable entries are created for you.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var sec in Model.Sections)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-diagram-3 me-2"></i>@sec.SectionName
+                                </h5>
+                                <span class="badge bg-light text-dark">@sec.TotalStudents students</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrEmpty(sec.Description))
+                            {
+                                <p class="text-muted mb-3">@sec.Description</p>
+                            }
+
+                            <h6 class="text-primary">Courses in this section:</h6>
+                            @if (sec.Courses.Any())
+                            {
+                                <ul class="list-group list-group-flush mb-3">
+                                    @foreach (var course in sec.Courses)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge bg-secondary me-2">@course.CourseCode</span>
+                                                @course.CourseName
+                                            </div>
+                                            <span class="badge bg-primary">@course.StudentCount</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No courses</p>
+                            }
+                        </div>
+                        <div class="card-footer bg-light">
+                            <a asp-action="SectionStudents" asp-route-sectionId="@sec.SectionId" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-people me-1"></i>View Students
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

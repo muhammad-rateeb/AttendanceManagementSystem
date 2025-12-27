@@ -1,0 +1,151 @@
+@model AttendanceManagementSystem.Models.ViewModels.StudentProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-person-circle me-2"></i>My Profile</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Personal Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle" style="font-size: 5rem; color: #6c757d;"></i>
+                    </div>
+                    <h4>@Model.FullName</h4>
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-envelope me-1"></i>@Model.Email
+                    </p>
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-credit-card me-1"></i>@(Model.RegistrationNumber ?? "N/A")
+                    </p>
+                    <hr />
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="text-primary">@Model.EnrolledCoursesCount</h5>
+                            <small class="text-muted">Courses</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="@(Model.OverallAttendancePercentage >= 75 ? "text-success" : "text-danger")">
+                                @Model.OverallAttendancePercentage.ToString("F1")%
+                            </h5>
+                            <small class="text-muted">Attendance</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Academic Info</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong><i class="bi bi-calendar-event me-2"></i>Session:</strong><br />
+                        <span class="badge bg-primary">@(Model.CurrentSession ?? "Not Assigned")</span>
+                    </p>
+                    <p class="mb-2">
+                        <strong><i class="bi bi-diagram-3 me-2"></i>Section:</strong><br />
+                        <span class="badge bg-secondary">@(Model.SectionName ?? "Not Assigned")</span>
+                    </p>
+                    <p class="mb-0">
+                        <strong><i class="bi bi-clock-history me-2"></i>Member Since:</strong><br />
+                        @Model.CreatedAt.ToString("MMMM dd, yyyy")
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-book me-2"></i>My Courses & Teachers</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.CourseTeachers.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Name</th>
+                                        <th>Teacher</th>
+                                        <th>Contact</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var course in Model.CourseTeachers)
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-secondary">@course.CourseCode</span></td>
+                                            <td>@course.CourseName</td>
+                                            <td>
+                                                <i class="bi bi-person-badge me-1"></i>@course.TeacherName
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(course.TeacherEmail))
+                                                {
+                                                    <a href="mailto:@course.TeacherEmail" class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-envelope"></i>
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No courses enrolled yet.</p>
+                            <a asp-action="RegisterCourses" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Register for Courses
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <a asp-action="MyTimetable" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-calendar-week me-1"></i>My Timetable
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <a asp-action="Attendance" class="btn btn-outline-success w-100">
+                                <i class="bi bi-calendar-check me-1"></i>My Attendance
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <a asp-action="Report" class="btn btn-outline-info w-100">
+                                <i class="bi bi-graph-up me-1"></i>Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

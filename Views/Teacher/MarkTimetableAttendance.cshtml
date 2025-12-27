@@ -1,0 +1,171 @@
+@model AttendanceManagementSystem.Models.ViewModels.MarkAttendanceViewModel
+@{
+    ViewData["Title"] = "Mark Timetable Attendance";
+    var timetableId = ViewData["TimetableId"];
+    var sectionName = ViewData["SectionName"];
+    var startTime = ViewData["StartTime"];
+    var endTime = ViewData["EndTime"];
+    var roomNumber = ViewData["RoomNumber"];
+    var minutesRemaining = ViewData["MinutesRemaining"];
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-check-circle"></i> Mark Attendance</h2>
+            <p class="text-muted mb-0">@Model.CourseCode - @Model.CourseName</p>
+        </div>
+        <a asp-action="TodaysSchedule" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Schedule
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <i class="bi bi-calendar-date text-primary fs-4"></i>
+                            <p class="mb-0"><small class="text-muted">Date</small></p>
+                            <strong>@Model.AttendanceDate.ToString("MMM dd, yyyy")</strong>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-diagram-3 text-primary fs-4"></i>
+                            <p class="mb-0"><small class="text-muted">Section</small></p>
+                            <strong>@sectionName</strong>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-clock text-primary fs-4"></i>
+                            <p class="mb-0"><small class="text-muted">Time</small></p>
+                            <strong>@(((TimeSpan)startTime!).ToString(@"hh\:mm")) - @(((TimeSpan)endTime!).ToString(@"hh\:mm"))</strong>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="bi bi-hourglass-split text-danger fs-4"></i>
+                            <p class="mb-0"><small class="text-muted">Time Remaining</small></p>
+                            <strong class="text-danger">@minutesRemaining minutes</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                    <p class="mb-0"><strong>Hurry!</strong> Attendance will close in <span class="badge bg-danger">@minutesRemaining min</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="MarkTimetableAttendance" method="post">
+        <input type="hidden" name="timetableId" value="@timetableId" />
+        <input type="hidden" asp-for="CourseId" />
+        <input type="hidden" asp-for="AttendanceDate" />
+
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Student List (@Model.Students.Count students)</h5>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-light" onclick="markAll('Present')">All Present</button>
+                    <button type="button" class="btn btn-light" onclick="markAll('Absent')">All Absent</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Registration No</th>
+                                <th>Student Name</th>
+                                <th>Status</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Students.Count; i++)
+                            {
+                                var student = Model.Students[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <input type="hidden" name="Entries[@i].StudentId" value="@student.StudentId" />
+                                        <code>@student.RegistrationNumber</code>
+                                    </td>
+                                    <td>@student.StudentName</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <input type="radio" class="btn-check status-radio" name="Entries[@i].Status" 
+                                                   id="present_@i" value="Present" @(student.Status == AttendanceManagementSystem.Models.AttendanceStatus.Present ? "checked" : "")>
+                                            <label class="btn btn-outline-success btn-sm" for="present_@i">
+                                                <i class="bi bi-check-circle"></i> Present
+                                            </label>
+
+                                            <input type="radio" class="btn-check status-radio" name="Entries[@i].Status" 
+                                                   id="late_@i" value="Late" @(student.Status == AttendanceManagementSystem.Models.AttendanceStatus.Late ? "checked" : "")>
+                                            <label class="btn btn-outline-warning btn-sm" for="late_@i">
+                                                <i class="bi bi-clock-history"></i> Late
+                                            </label>
+
+                                            <input type="radio" class="btn-check status-radio" name="Entries[@i].Status" 
+                                                   id="absent_@i" value="Absent" @(student.Status == AttendanceManagementSystem.Models.AttendanceStatus.Absent ? "checked" : "")>
+                                            <label class="btn btn-outline-danger btn-sm" for="absent_@i">
+                                                <i class="bi bi-x-circle"></i> Absent
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="Entries[@i].Remarks" class="form-control form-control-sm" 
+                                               value="@student.Remarks" placeholder="Optional remarks..." style="max-width: 200px;">
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!Model.Students.Any())
+                {
+                    <div class="text-center py-4">
+                        <i class="bi bi-person-x display-4 text-muted"></i>
+                        <p class="text-muted mt-2">No students enrolled in this section.</p>
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="TodaysSchedule" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle"></i> Submit Attendance
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function markAll(status) {
+            document.querySelectorAll('.status-radio').forEach(function(radio) {
+                if (radio.value === status) {
+                    radio.checked = true;
+                }
+            });
+        }
+
+        // Countdown timer
+        var minutesLeft = @minutesRemaining;
+        setInterval(function() {
+            minutesLeft--;
+            if (minutesLeft <= 0) {
+                alert('Attendance window has closed!');
+                window.location.href = '@Url.Action("TodaysSchedule")';
+            }
+        }, 60000);
+    </script>
+}

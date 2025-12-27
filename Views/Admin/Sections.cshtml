@@ -1,0 +1,85 @@
+@model List<AttendanceManagementSystem.Models.ViewModels.SectionListViewModel>
+@{
+    ViewData["Title"] = "Manage Sections";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-diagram-3"></i> Manage Sections</h2>
+        <a asp-action="CreateSection" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Section
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Section Name</th>
+                            <th>Description</th>
+                            <th>Capacity</th>
+                            <th>Enrolled</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sec in Model)
+                        {
+                            <tr>
+                                <td><strong>@sec.SectionName</strong></td>
+                                <td>@(sec.Description ?? "N/A")</td>
+                                <td>@sec.MaxCapacity</td>
+                                <td>
+                                    <span class="badge @(sec.CurrentEnrollment >= sec.MaxCapacity ? "bg-danger" : "bg-info")">
+                                        @sec.CurrentEnrollment / @sec.MaxCapacity
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (sec.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="EditSection" asp-route-id="@sec.SectionId" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="DeleteSection" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                            <input type="hidden" name="id" value="@sec.SectionId" />
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!Model.Any())
+            {
+                <div class="text-center py-4">
+                    <i class="bi bi-diagram-3 display-4 text-muted"></i>
+                    <p class="text-muted mt-2">No sections found.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

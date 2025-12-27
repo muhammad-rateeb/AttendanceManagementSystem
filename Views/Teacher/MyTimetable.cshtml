@@ -1,0 +1,114 @@
+@model AttendanceManagementSystem.Models.ViewModels.TeacherTimetableViewModel
+@{
+    ViewData["Title"] = "My Timetable";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-calendar-week me-2"></i>My Timetable</h2>
+            <p class="text-muted mb-0">@Model.TeacherName</p>
+        </div>
+        <div>
+            <a asp-action="TodaysSchedule" class="btn btn-success me-2">
+                <i class="bi bi-calendar-day me-1"></i>Today's Classes
+            </a>
+            <a asp-action="Dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    @if (!Model.Monday.Any() && !Model.Tuesday.Any() && !Model.Wednesday.Any() && 
+         !Model.Thursday.Any() && !Model.Friday.Any() && !Model.Saturday.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No timetable entries found. Please contact your administrator to create timetable entries.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @{
+                var days = new[] {
+                    ("Monday", Model.Monday),
+                    ("Tuesday", Model.Tuesday),
+                    ("Wednesday", Model.Wednesday),
+                    ("Thursday", Model.Thursday),
+                    ("Friday", Model.Friday),
+                    ("Saturday", Model.Saturday)
+                };
+
+                var today = DateTime.Today.DayOfWeek;
+            }
+
+            @foreach (var (dayName, entries) in days)
+            {
+                var isToday = dayName == today.ToString();
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 @(isToday ? "border-success border-2" : "")">
+                        <div class="card-header @(isToday ? "bg-success text-white" : "bg-light")">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar-day me-2"></i>@dayName
+                                @if (isToday)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">Today</span>
+                                }
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (entries.Any())
+                            {
+                                @foreach (var entry in entries.OrderBy(e => e.StartTime))
+                                {
+                                    <div class="border-start border-3 border-success ps-3 mb-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong class="text-success">@entry.CourseCode</strong>
+                                                <br />
+                                                <small>@entry.CourseName</small>
+                                            </div>
+                                            <span class="badge bg-secondary">
+                                                @entry.StartTime.ToString(@"hh\:mm") - @entry.EndTime.ToString(@"hh\:mm")
+                                            </span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-diagram-3 me-1"></i>@entry.SectionName
+                                                <span class="badge bg-primary ms-2">@entry.StudentCount students</span>
+                                            </small>
+                                            @if (!string.IsNullOrEmpty(entry.RoomNumber))
+                                            {
+                                                <br />
+                                                <small class="text-muted">
+                                                    <i class="bi bi-geo-alt me-1"></i>@entry.RoomNumber
+                                                </small>
+                                            }
+                                        </div>
+                                        @if (isToday)
+                                        {
+                                            <div class="mt-2">
+                                                <a asp-action="MarkTimetableAttendance" asp-route-timetableId="@entry.TimetableId" 
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check2-square me-1"></i>Mark Attendance
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-calendar-x"></i>
+                                    <p class="mb-0 mt-2">No classes</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

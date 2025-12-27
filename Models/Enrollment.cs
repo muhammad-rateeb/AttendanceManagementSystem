@@ -19,6 +19,9 @@ namespace AttendanceManagementSystem.Models
         [Display(Name = "Course")]
         public int CourseId { get; set; }
 
+        [Display(Name = "Section")]
+        public int? SectionId { get; set; }
+
         [Required]
         [Display(Name = "Enrollment Date")]
         public DateTime EnrollmentDate { get; set; } = DateTime.UtcNow;
@@ -34,5 +37,8 @@ namespace AttendanceManagementSystem.Models
 
         [ForeignKey("CourseId")]
         public virtual Course Course { get; set; } = null!;
+
+        [ForeignKey("SectionId")]
+        public virtual Section? Section { get; set; }
     }
 }

@@ -1,0 +1,118 @@
+@model AttendanceManagementSystem.Models.ViewModels.TeacherAssignmentViewModel
+@{
+    ViewData["Title"] = "Manage Teacher Courses";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-book"></i> Manage Course Assignments</h2>
+            <p class="text-muted mb-0">Teacher: <strong>@Model.TeacherName</strong> (@Model.EmployeeId)</p>
+        </div>
+        <a asp-action="Teachers" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Teachers
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Assign Course</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AssignCourseToTeacher" method="post">
+                        <input type="hidden" name="teacherId" value="@Model.TeacherId" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Select Course</label>
+                            <select name="courseId" class="form-select" required>
+                                <option value="">-- Select Course --</option>
+                                @foreach (var course in Model.AvailableCourses)
+                                {
+                                    <option value="@course.CourseId">@course.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle"></i> Assign Course
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-list-check"></i> Assigned Courses</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Assigned</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var assignment in Model.Assignments)
+                                {
+                                    <tr class="@(!assignment.IsActive ? "table-secondary" : "")">
+                                        <td>
+                                            <strong>@assignment.CourseCode</strong><br />
+                                            <small class="text-muted">@assignment.CourseName</small>
+                                        </td>
+                                        <td>@assignment.AssignmentDate.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (assignment.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (assignment.IsActive)
+                                            {
+                                                <form asp-action="RemoveCourseFromTeacher" method="post" class="d-inline" 
+                                                      onsubmit="return confirm('Are you sure you want to remove this course assignment?');">
+                                                    <input type="hidden" name="teacherId" value="@Model.TeacherId" />
+                                                    <input type="hidden" name="courseId" value="@assignment.CourseId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-x-circle"></i> Remove
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (!Model.Assignments.Any())
+                    {
+                        <div class="text-center py-3">
+                            <i class="bi bi-book display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No course assignments found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

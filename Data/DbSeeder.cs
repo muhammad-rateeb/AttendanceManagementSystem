@@ -31,6 +31,12 @@ namespace AttendanceManagementSystem.Data
             // Seed Sample Students
             await SeedStudentsAsync(userManager);
 
+            // Seed Sample Sessions
+            await SeedSessionsAsync(context);
+
+            // Seed Sample Sections
+            await SeedSectionsAsync(context);
+
             // Seed Sample Courses
             await SeedCoursesAsync(context);
 
@@ -40,8 +46,11 @@ namespace AttendanceManagementSystem.Data
             // Seed Student Enrollments
             await SeedEnrollmentsAsync(context, userManager);
 
-            // Seed Sample Attendance Records
-            await SeedAttendanceAsync(context, userManager);
+            // Seed Timetable entries for Monday
+            await SeedTimetableAsync(context, userManager);
+
+            // Clear and re-seed Attendance Records (fresh start)
+            await ClearAndReseedAttendanceAsync(context);
         }
 
         private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
@@ -155,6 +164,10 @@ namespace AttendanceManagementSystem.Data
         {
             if (!await context.Courses.AnyAsync())
             {
+                // Get the current session (Spring 2025)
+                var currentSession = await context.Sessions.FirstOrDefaultAsync(s => s.IsCurrent);
+                var sessionId = currentSession?.SessionId;
+
                 var courses = new[]
                 {
                     new Course
@@ -165,7 +178,8 @@ namespace AttendanceManagementSystem.Data
                         CreditHours = 3,
                         Semester = "Fall",
                         AcademicYear = 2024,
-                        IsActive = true
+                        IsActive = true,
+                        SessionId = sessionId
                     },
                     new Course
                     {
@@ -175,7 +189,8 @@ namespace AttendanceManagementSystem.Data
                         CreditHours = 3,
                         Semester = "Fall",
                         AcademicYear = 2024,
-                        IsActive = true
+                        IsActive = true,
+                        SessionId = sessionId
                     },
                     new Course
                     {
@@ -185,7 +200,8 @@ namespace AttendanceManagementSystem.Data
                         CreditHours = 3,
                         Semester = "Fall",
                         AcademicYear = 2024,
-                        IsActive = true
+                        IsActive = true,
+                        SessionId = sessionId
                     },
                     new Course
                     {
@@ -195,12 +211,27 @@ namespace AttendanceManagementSystem.Data
                         CreditHours = 3,
                         Semester = "Fall",
                         AcademicYear = 2024,
-                        IsActive = true
+                        IsActive = true,
+                        SessionId = sessionId
                     }
                 };
 
                 await context.Courses.AddRangeAsync(courses);
                 await context.SaveChangesAsync();
+            }
+            else
+            {
+                // Update existing courses with session if not set
+                var currentSession = await context.Sessions.FirstOrDefaultAsync(s => s.IsCurrent);
+                if (currentSession != null)
+                {
+                    var coursesWithoutSession = await context.Courses.Where(c => c.SessionId == null).ToListAsync();
+                    foreach (var course in coursesWithoutSession)
+                    {
+                        course.SessionId = currentSession.SessionId;
+                    }
+                    await context.SaveChangesAsync();
+                }
             }
         }
 
@@ -236,6 +267,7 @@ namespace AttendanceManagementSystem.Data
             {
                 var students = await userManager.GetUsersInRoleAsync("Student");
                 var courses = await context.Courses.Take(3).ToListAsync();
+                var sectionA = await context.Sections.FirstOrDefaultAsync(s => s.SectionName == "Section A");
 
                 var enrollments = new List<Enrollment>();
 
@@ -247,6 +279,7 @@ namespace AttendanceManagementSystem.Data
                         {
                             StudentId = student.Id,
                             CourseId = course.CourseId,
+                            SectionId = sectionA?.SectionId, // Assign all students to Section A
                             EnrollmentDate = DateTime.UtcNow.AddDays(-30),
                             IsActive = true
                         });
@@ -256,62 +289,256 @@ namespace AttendanceManagementSystem.Data
                 await context.Enrollments.AddRangeAsync(enrollments);
                 await context.SaveChangesAsync();
             }
+            else
+            {
+                // Update existing enrollments with section if not set
+                var sectionA = await context.Sections.FirstOrDefaultAsync(s => s.SectionName == "Section A");
+                if (sectionA != null)
+                {
+                    var enrollmentsWithoutSection = await context.Enrollments.Where(e => e.SectionId == null).ToListAsync();
+                    foreach (var enrollment in enrollmentsWithoutSection)
+                    {
+                        enrollment.SectionId = sectionA.SectionId;
+                    }
+                    await context.SaveChangesAsync();
+                }
+            }
         }
 
-        private static async Task SeedAttendanceAsync(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        /// <summary>
+        /// Clear all existing attendance records for a fresh start
+        /// </summary>
+        private static async Task ClearAndReseedAttendanceAsync(ApplicationDbContext context)
         {
-            if (!await context.Attendances.AnyAsync())
+            // Clear all existing attendance records
+            var existingAttendance = await context.Attendances.ToListAsync();
+            if (existingAttendance.Any())
             {
-                var students = await userManager.GetUsersInRoleAsync("Student");
-                var teacherCourses = await context.TeacherCourses
-                    .Include(tc => tc.Course)
-                    .ToListAsync();
+                context.Attendances.RemoveRange(existingAttendance);
+                await context.SaveChangesAsync();
+            }
+            // No pre-seeded attendance - will be marked fresh via teacher UI
+        }
 
-                var random = new Random();
-                var attendances = new List<Attendance>();
+        /// <summary>
+        /// Seed timetable entries for Monday classes
+        /// </summary>
+        private static async Task SeedTimetableAsync(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        {
+            if (!await context.Timetables.AnyAsync())
+            {
+                var teacher1 = await userManager.FindByEmailAsync("teacher1@ams.edu.pk");
+                var teacher2 = await userManager.FindByEmailAsync("teacher2@ams.edu.pk");
+                var teacher3 = await userManager.FindByEmailAsync("teacher3@ams.edu.pk");
 
-                // Generate attendance for last 10 days
-                for (int day = 10; day >= 1; day--)
+                var courses = await context.Courses.ToListAsync();
+                var sectionA = await context.Sections.FirstOrDefaultAsync(s => s.SectionName == "Section A");
+
+                if (teacher1 != null && teacher2 != null && teacher3 != null && courses.Any() && sectionA != null)
                 {
-                    var date = DateTime.Today.AddDays(-day);
-                    
-                    // Skip weekends
-                    if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-                        continue;
-
-                    foreach (var tc in teacherCourses)
+                    var timetables = new List<Timetable>
                     {
-                        var enrolledStudents = await context.Enrollments
-                            .Where(e => e.CourseId == tc.CourseId && e.IsActive)
-                            .Select(e => e.StudentId)
-                            .ToListAsync();
-
-                        foreach (var studentId in enrolledStudents)
+                        // Monday Schedule for Section A
+                        new Timetable
                         {
-                            var statusValue = random.Next(1, 11); // 1-10
-                            AttendanceStatus status;
-                            
-                            if (statusValue <= 7) // 70% Present
-                                status = AttendanceStatus.Present;
-                            else if (statusValue <= 9) // 20% Absent
-                                status = AttendanceStatus.Absent;
-                            else // 10% Late
-                                status = AttendanceStatus.Late;
-
-                            attendances.Add(new Attendance
-                            {
-                                StudentId = studentId,
-                                CourseId = tc.CourseId,
-                                MarkedById = tc.TeacherId,
-                                AttendanceDate = date,
-                                Status = status,
-                                CreatedAt = date
-                            });
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-414")?.CourseId ?? courses[0].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher1.Id,
+                            DayOfWeek = DayOfWeek.Monday,
+                            StartTime = new TimeSpan(9, 0, 0),  // 9:00 AM
+                            EndTime = new TimeSpan(10, 30, 0),  // 10:30 AM
+                            RoomNumber = "Lab 1",
+                            IsActive = true
+                        },
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-412")?.CourseId ?? courses[1].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher1.Id,
+                            DayOfWeek = DayOfWeek.Monday,
+                            StartTime = new TimeSpan(11, 0, 0),  // 11:00 AM
+                            EndTime = new TimeSpan(12, 30, 0),  // 12:30 PM
+                            RoomNumber = "Room 101",
+                            IsActive = true
+                        },
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-410")?.CourseId ?? courses[2].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher2.Id,
+                            DayOfWeek = DayOfWeek.Monday,
+                            StartTime = new TimeSpan(14, 0, 0),  // 2:00 PM
+                            EndTime = new TimeSpan(15, 30, 0),  // 3:30 PM
+                            RoomNumber = "Room 102",
+                            IsActive = true
+                        },
+                        // Tuesday Schedule
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-414")?.CourseId ?? courses[0].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher1.Id,
+                            DayOfWeek = DayOfWeek.Tuesday,
+                            StartTime = new TimeSpan(9, 0, 0),
+                            EndTime = new TimeSpan(10, 30, 0),
+                            RoomNumber = "Lab 1",
+                            IsActive = true
+                        },
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-416")?.CourseId ?? courses[3].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher3.Id,
+                            DayOfWeek = DayOfWeek.Tuesday,
+                            StartTime = new TimeSpan(11, 0, 0),
+                            EndTime = new TimeSpan(12, 30, 0),
+                            RoomNumber = "Room 103",
+                            IsActive = true
+                        },
+                        // Wednesday Schedule
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-412")?.CourseId ?? courses[1].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher1.Id,
+                            DayOfWeek = DayOfWeek.Wednesday,
+                            StartTime = new TimeSpan(9, 0, 0),
+                            EndTime = new TimeSpan(10, 30, 0),
+                            RoomNumber = "Room 101",
+                            IsActive = true
+                        },
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-410")?.CourseId ?? courses[2].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher2.Id,
+                            DayOfWeek = DayOfWeek.Wednesday,
+                            StartTime = new TimeSpan(14, 0, 0),
+                            EndTime = new TimeSpan(15, 30, 0),
+                            RoomNumber = "Room 102",
+                            IsActive = true
+                        },
+                        // Thursday Schedule
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-414")?.CourseId ?? courses[0].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher1.Id,
+                            DayOfWeek = DayOfWeek.Thursday,
+                            StartTime = new TimeSpan(10, 0, 0),
+                            EndTime = new TimeSpan(11, 30, 0),
+                            RoomNumber = "Lab 1",
+                            IsActive = true
+                        },
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-416")?.CourseId ?? courses[3].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher3.Id,
+                            DayOfWeek = DayOfWeek.Thursday,
+                            StartTime = new TimeSpan(14, 0, 0),
+                            EndTime = new TimeSpan(15, 30, 0),
+                            RoomNumber = "Room 103",
+                            IsActive = true
+                        },
+                        // Friday Schedule
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-412")?.CourseId ?? courses[1].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher1.Id,
+                            DayOfWeek = DayOfWeek.Friday,
+                            StartTime = new TimeSpan(9, 0, 0),
+                            EndTime = new TimeSpan(10, 30, 0),
+                            RoomNumber = "Room 101",
+                            IsActive = true
+                        },
+                        new Timetable
+                        {
+                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-410")?.CourseId ?? courses[2].CourseId,
+                            SectionId = sectionA.SectionId,
+                            TeacherId = teacher2.Id,
+                            DayOfWeek = DayOfWeek.Friday,
+                            StartTime = new TimeSpan(11, 0, 0),
+                            EndTime = new TimeSpan(12, 30, 0),
+                            RoomNumber = "Room 102",
+                            IsActive = true
                         }
-                    }
-                }
+                    };
 
-                await context.Attendances.AddRangeAsync(attendances);
+                    await context.Timetables.AddRangeAsync(timetables);
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
+        private static async Task SeedSessionsAsync(ApplicationDbContext context)
+        {
+            if (!await context.Sessions.AnyAsync())
+            {
+                var sessions = new[]
+                {
+                    new Session
+                    {
+                        SessionName = "Fall 2024",
+                        StartDate = new DateTime(2024, 9, 1),
+                        EndDate = new DateTime(2025, 1, 15),
+                        IsCurrent = false,
+                        IsActive = true
+                    },
+                    new Session
+                    {
+                        SessionName = "Spring 2025",
+                        StartDate = new DateTime(2025, 2, 1),
+                        EndDate = new DateTime(2025, 6, 15),
+                        IsCurrent = true,
+                        IsActive = true
+                    },
+                    new Session
+                    {
+                        SessionName = "Fall 2025",
+                        StartDate = new DateTime(2025, 9, 1),
+                        EndDate = new DateTime(2026, 1, 15),
+                        IsCurrent = false,
+                        IsActive = true
+                    }
+                };
+
+                await context.Sessions.AddRangeAsync(sessions);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private static async Task SeedSectionsAsync(ApplicationDbContext context)
+        {
+            if (!await context.Sections.AnyAsync())
+            {
+                var sections = new[]
+                {
+                    new Section
+                    {
+                        SectionName = "Section A",
+                        Description = "Morning Section",
+                        MaxCapacity = 40,
+                        IsActive = true
+                    },
+                    new Section
+                    {
+                        SectionName = "Section B",
+                        Description = "Afternoon Section",
+                        MaxCapacity = 40,
+                        IsActive = true
+                    },
+                    new Section
+                    {
+                        SectionName = "Section C",
+                        Description = "Evening Section",
+                        MaxCapacity = 35,
+                        IsActive = true
+                    }
+                };
+
+                await context.Sections.AddRangeAsync(sections);
                 await context.SaveChangesAsync();
             }
         }

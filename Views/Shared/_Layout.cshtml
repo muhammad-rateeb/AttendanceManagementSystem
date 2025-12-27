@@ -58,8 +58,23 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Teacher" asp-action="TodaysSchedule">
+                                        <i class="bi bi-calendar-week me-1"></i> Today's Schedule
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" asp-controller="Teacher" asp-action="MyCourses">
                                         <i class="bi bi-book me-1"></i> My Courses
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Teacher" asp-action="MySections">
+                                        <i class="bi bi-diagram-3 me-1"></i> My Sections
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Teacher" asp-action="MyTimetable">
+                                        <i class="bi bi-calendar3 me-1"></i> My Timetable
                                     </a>
                                 </li>
                                 <li class="nav-item">
@@ -86,6 +101,11 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Student" asp-action="MyTimetable">
+                                        <i class="bi bi-calendar-week me-1"></i> My Timetable
+                                    </a>
+                                </li>
+                                <li class="nav-item">
                                     <a class="nav-link" asp-controller="Student" asp-action="Report">
                                         <i class="bi bi-graph-up me-1"></i> Reports
                                     </a>
@@ -103,9 +123,24 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                        <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
-                                            <i class="bi bi-person me-2"></i> Profile
-                                        </a>
+                                        @if (User.IsInRole("Teacher"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Teacher" asp-action="Profile">
+                                                <i class="bi bi-person me-2"></i> My Profile
+                                            </a>
+                                        }
+                                        else if (User.IsInRole("Student"))
+                                        {
+                                            <a class="dropdown-item" asp-controller="Student" asp-action="Profile">
+                                                <i class="bi bi-person me-2"></i> My Profile
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                                <i class="bi bi-person me-2"></i> Profile
+                                            </a>
+                                        }
                                     </li>
                                     <li>
                                         <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">

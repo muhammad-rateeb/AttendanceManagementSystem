@@ -1,0 +1,105 @@
+@model AttendanceManagementSystem.Models.ViewModels.StudentTimetableViewModel
+@{
+    ViewData["Title"] = "My Timetable";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-calendar-week me-2"></i>My Timetable</h2>
+            <p class="text-muted mb-0">
+                @Model.StudentName 
+                @if (!string.IsNullOrEmpty(Model.SectionName))
+                {
+                    <span class="badge bg-primary ms-2">@Model.SectionName</span>
+                }
+            </p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    @if (!Model.Monday.Any() && !Model.Tuesday.Any() && !Model.Wednesday.Any() && 
+         !Model.Thursday.Any() && !Model.Friday.Any() && !Model.Saturday.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No timetable entries found. Please contact your administrator to assign a timetable to your section.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @{
+                var days = new[] {
+                    ("Monday", Model.Monday),
+                    ("Tuesday", Model.Tuesday),
+                    ("Wednesday", Model.Wednesday),
+                    ("Thursday", Model.Thursday),
+                    ("Friday", Model.Friday),
+                    ("Saturday", Model.Saturday)
+                };
+
+                var today = DateTime.Today.DayOfWeek;
+            }
+
+            @foreach (var (dayName, entries) in days)
+            {
+                var isToday = dayName == today.ToString();
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 @(isToday ? "border-primary border-2" : "")">
+                        <div class="card-header @(isToday ? "bg-primary text-white" : "bg-light")">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calendar-day me-2"></i>@dayName
+                                @if (isToday)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">Today</span>
+                                }
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (entries.Any())
+                            {
+                                @foreach (var entry in entries.OrderBy(e => e.StartTime))
+                                {
+                                    <div class="border-start border-3 border-primary ps-3 mb-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong class="text-primary">@entry.CourseCode</strong>
+                                                <br />
+                                                <small>@entry.CourseName</small>
+                                            </div>
+                                            <span class="badge bg-secondary">
+                                                @entry.StartTime.ToString(@"hh\:mm") - @entry.EndTime.ToString(@"hh\:mm")
+                                            </span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <i class="bi bi-person-badge me-1"></i>@entry.TeacherName
+                                            </small>
+                                            @if (!string.IsNullOrEmpty(entry.RoomNumber))
+                                            {
+                                                <br />
+                                                <small class="text-muted">
+                                                    <i class="bi bi-geo-alt me-1"></i>@entry.RoomNumber
+                                                </small>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <i class="bi bi-calendar-x"></i>
+                                    <p class="mb-0 mt-2">No classes</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

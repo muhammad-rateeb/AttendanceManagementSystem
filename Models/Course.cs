@@ -42,13 +42,19 @@ namespace AttendanceManagementSystem.Models
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; } = true;
 
+        [Display(Name = "Session")]
+        public int? SessionId { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation Properties
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("SessionId")]
+        public virtual Session? Session { get; set; }
         public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
         public virtual ICollection<TeacherCourse> TeacherCourses { get; set; } = new List<TeacherCourse>();
         public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public virtual ICollection<Timetable> Timetables { get; set; } = new List<Timetable>();
     }
 }

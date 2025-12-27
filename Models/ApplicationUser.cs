@@ -32,6 +32,7 @@ namespace AttendanceManagementSystem.Models
         public virtual ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
         public virtual ICollection<TeacherCourse> TeacherCourses { get; set; } = new List<TeacherCourse>();
         public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+        public virtual ICollection<Timetable> Timetables { get; set; } = new List<Timetable>();
 
         // Computed Properties
         public string FullName => $"{FirstName} {LastName}";

@@ -1,0 +1,131 @@
+@model AttendanceManagementSystem.Models.ViewModels.StudentEnrollmentViewModel
+@{
+    ViewData["Title"] = "Manage Student Enrollments";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-journal-bookmark"></i> Manage Enrollments</h2>
+            <p class="text-muted mb-0">Student: <strong>@Model.StudentName</strong> (@Model.RegistrationNumber)</p>
+        </div>
+        <a asp-action="Students" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Students
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Enroll in Course</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EnrollStudent" method="post">
+                        <input type="hidden" name="studentId" value="@Model.StudentId" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Select Course</label>
+                            <select name="courseId" class="form-select" required>
+                                <option value="">-- Select Course --</option>
+                                @foreach (var course in Model.AvailableCourses)
+                                {
+                                    <option value="@course.CourseId">@course.DisplayName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Select Section (Optional)</label>
+                            <select name="sectionId" class="form-select">
+                                <option value="">-- No Section --</option>
+                                @foreach (var sec in Model.AvailableSections)
+                                {
+                                    <option value="@sec.SectionId">@sec.SectionName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle"></i> Enroll Student
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-list-check"></i> Current Enrollments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Section</th>
+                                    <th>Enrolled</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var enrollment in Model.Enrollments)
+                                {
+                                    <tr class="@(!enrollment.IsActive ? "table-secondary" : "")">
+                                        <td>
+                                            <strong>@enrollment.CourseCode</strong><br />
+                                            <small class="text-muted">@enrollment.CourseName</small>
+                                        </td>
+                                        <td>@(enrollment.SectionName ?? "N/A")</td>
+                                        <td>@enrollment.EnrollmentDate.ToString("MMM dd, yyyy")</td>
+                                        <td>
+                                            @if (enrollment.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (enrollment.IsActive)
+                                            {
+                                                <form asp-action="UnenrollStudent" method="post" class="d-inline" 
+                                                      onsubmit="return confirm('Are you sure you want to unenroll this student from this course?');">
+                                                    <input type="hidden" name="studentId" value="@Model.StudentId" />
+                                                    <input type="hidden" name="enrollmentId" value="@enrollment.EnrollmentId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-x-circle"></i> Unenroll
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (!Model.Enrollments.Any())
+                    {
+                        <div class="text-center py-3">
+                            <i class="bi bi-journal-x display-4 text-muted"></i>
+                            <p class="text-muted mt-2">No enrollments found.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

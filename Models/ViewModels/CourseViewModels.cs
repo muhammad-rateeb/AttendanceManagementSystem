@@ -101,8 +101,165 @@ namespace AttendanceManagementSystem.Models.ViewModels
         public string StudentId { get; set; } = string.Empty;
         public string StudentName { get; set; } = string.Empty;
         public string RegistrationNumber { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        
+        // Session & Section Info
+        public string? CurrentSession { get; set; }
+        public string? SectionName { get; set; }
+        
         public List<CourseAttendanceSummary> EnrolledCourses { get; set; } = new();
         public double OverallAttendancePercentage { get; set; }
         public AttendanceStatus? TodaysStatus { get; set; }
+        
+        // Timetable for today
+        public List<StudentTimetableItem> TodaysTimetable { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Student Timetable Item
+    /// </summary>
+    public class StudentTimetableItem
+    {
+        public int TimetableId { get; set; }
+        public string CourseCode { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
+        public string TeacherName { get; set; } = string.Empty;
+        public string SectionName { get; set; } = string.Empty;
+        public DayOfWeek DayOfWeek { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public string? RoomNumber { get; set; }
+    }
+
+    /// <summary>
+    /// Student My Timetable View Model
+    /// </summary>
+    public class StudentTimetableViewModel
+    {
+        public string StudentName { get; set; } = string.Empty;
+        public string? SectionName { get; set; }
+        public List<StudentTimetableItem> Monday { get; set; } = new();
+        public List<StudentTimetableItem> Tuesday { get; set; } = new();
+        public List<StudentTimetableItem> Wednesday { get; set; } = new();
+        public List<StudentTimetableItem> Thursday { get; set; } = new();
+        public List<StudentTimetableItem> Friday { get; set; } = new();
+        public List<StudentTimetableItem> Saturday { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Student Profile View Model
+    /// </summary>
+    public class StudentProfileViewModel
+    {
+        public string StudentId { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? RegistrationNumber { get; set; }
+        public string? CurrentSession { get; set; }
+        public string? SectionName { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public int EnrolledCoursesCount { get; set; }
+        public double OverallAttendancePercentage { get; set; }
+        public List<CourseTeacherInfo> CourseTeachers { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Course Teacher Info for Student Profile
+    /// </summary>
+    public class CourseTeacherInfo
+    {
+        public string CourseCode { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
+        public string TeacherName { get; set; } = string.Empty;
+        public string? TeacherEmail { get; set; }
+    }
+
+    /// <summary>
+    /// Teacher Profile View Model
+    /// </summary>
+    public class TeacherProfileViewModel
+    {
+        public string TeacherId { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? EmployeeId { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public int AssignedCoursesCount { get; set; }
+        public int TotalStudents { get; set; }
+        public List<TeacherCourseInfo> Courses { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Teacher Course Info for Profile
+    /// </summary>
+    public class TeacherCourseInfo
+    {
+        public int CourseId { get; set; }
+        public string CourseCode { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
+        public int EnrolledStudents { get; set; }
+        public string? SessionName { get; set; }
+    }
+
+    /// <summary>
+    /// Teacher My Sections View Model
+    /// </summary>
+    public class TeacherSectionsViewModel
+    {
+        public string TeacherName { get; set; } = string.Empty;
+        public List<TeacherSectionInfo> Sections { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Teacher Section Info
+    /// </summary>
+    public class TeacherSectionInfo
+    {
+        public int SectionId { get; set; }
+        public string SectionName { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public List<SectionCourseInfo> Courses { get; set; } = new();
+        public int TotalStudents { get; set; }
+    }
+
+    /// <summary>
+    /// Section Course Info
+    /// </summary>
+    public class SectionCourseInfo
+    {
+        public int CourseId { get; set; }
+        public string CourseCode { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
+        public int StudentCount { get; set; }
+    }
+
+    /// <summary>
+    /// Teacher Timetable View Model
+    /// </summary>
+    public class TeacherTimetableViewModel
+    {
+        public string TeacherName { get; set; } = string.Empty;
+        public List<TeacherTimetableItem> Monday { get; set; } = new();
+        public List<TeacherTimetableItem> Tuesday { get; set; } = new();
+        public List<TeacherTimetableItem> Wednesday { get; set; } = new();
+        public List<TeacherTimetableItem> Thursday { get; set; } = new();
+        public List<TeacherTimetableItem> Friday { get; set; } = new();
+        public List<TeacherTimetableItem> Saturday { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Teacher Timetable Item
+    /// </summary>
+    public class TeacherTimetableItem
+    {
+        public int TimetableId { get; set; }
+        public string CourseCode { get; set; } = string.Empty;
+        public string CourseName { get; set; } = string.Empty;
+        public string SectionName { get; set; } = string.Empty;
+        public DayOfWeek DayOfWeek { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public string? RoomNumber { get; set; }
+        public int StudentCount { get; set; }
     }
 }

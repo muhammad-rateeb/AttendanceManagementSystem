@@ -1,0 +1,91 @@
+@model List<AttendanceManagementSystem.Models.ViewModels.TimetableListViewModel>
+@{
+    ViewData["Title"] = "Manage Timetables";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-week"></i> Manage Timetables</h2>
+        <a asp-action="CreateTimetable" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Entry
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Teacher</th>
+                            <th>Room</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@item.DayOfWeek</span></td>
+                                <td>
+                                    <i class="bi bi-clock"></i> 
+                                    @item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")
+                                </td>
+                                <td>
+                                    <strong>@item.CourseCode</strong><br />
+                                    <small class="text-muted">@item.CourseName</small>
+                                </td>
+                                <td>@item.SectionName</td>
+                                <td>@item.TeacherName</td>
+                                <td>@(item.RoomNumber ?? "N/A")</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="EditTimetable" asp-route-id="@item.TimetableId" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="DeleteTimetable" method="post" class="d-inline" onsubmit="return confirm('Are you sure?');">
+                                            <input type="hidden" name="id" value="@item.TimetableId" />
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!Model.Any())
+            {
+                <div class="text-center py-4">
+                    <i class="bi bi-calendar-week display-4 text-muted"></i>
+                    <p class="text-muted mt-2">No timetable entries found.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

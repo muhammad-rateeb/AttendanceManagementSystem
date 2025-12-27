@@ -20,6 +20,7 @@ namespace AttendanceManagementSystem.Services
         Task<bool> RemoveTeacherFromCourseAsync(string teacherId, int courseId);
         Task<StudentDashboardViewModel> GetStudentDashboardAsync(string studentId);
         Task<TeacherDashboardViewModel> GetTeacherDashboardAsync(string teacherId);
+        ApplicationDbContext GetContext();
     }
 
     /// <summary>
@@ -35,6 +36,11 @@ namespace AttendanceManagementSystem.Services
             _context = context;
             _attendanceService = attendanceService;
         }
+
+        /// <summary>
+        /// Get the database context for advanced queries
+        /// </summary>
+        public ApplicationDbContext GetContext() => _context;
 
         public async Task<List<Course>> GetAllCoursesAsync()
         {
@@ -271,14 +277,65 @@ namespace AttendanceManagementSystem.Services
                 .Where(a => a.StudentId == studentId && a.AttendanceDate.Date == DateTime.Today)
                 .FirstOrDefaultAsync();
 
+            // Get student's section from enrollment
+            var enrollment = await _context.Enrollments
+                .Include(e => e.Section)
+                .Include(e => e.Course)
+                    .ThenInclude(c => c.Session)
+                .Where(e => e.StudentId == studentId && e.IsActive)
+                .FirstOrDefaultAsync();
+
+            var sectionName = enrollment?.Section?.SectionName;
+            var currentSession = enrollment?.Course?.Session?.SessionName;
+
+            // If no section from enrollment, try to get from current session
+            if (string.IsNullOrEmpty(currentSession))
+            {
+                var activeSession = await _context.Sessions
+                    .Where(s => s.IsCurrent && s.IsActive)
+                    .FirstOrDefaultAsync();
+                currentSession = activeSession?.SessionName;
+            }
+
+            // Get today's timetable for the student's section
+            var todaysTimetable = new List<StudentTimetableItem>();
+            if (enrollment?.SectionId != null)
+            {
+                var today = DateTime.Today.DayOfWeek;
+                var timetableEntries = await _context.Timetables
+                    .Include(t => t.Course)
+                    .Include(t => t.Section)
+                    .Include(t => t.Teacher)
+                    .Where(t => t.SectionId == enrollment.SectionId && t.DayOfWeek == today && t.IsActive)
+                    .OrderBy(t => t.StartTime)
+                    .ToListAsync();
+
+                todaysTimetable = timetableEntries.Select(t => new StudentTimetableItem
+                {
+                    TimetableId = t.TimetableId,
+                    CourseCode = t.Course.CourseCode,
+                    CourseName = t.Course.CourseName,
+                    TeacherName = t.Teacher.FullName,
+                    SectionName = t.Section.SectionName,
+                    DayOfWeek = t.DayOfWeek,
+                    StartTime = t.StartTime,
+                    EndTime = t.EndTime,
+                    RoomNumber = t.RoomNumber
+                }).ToList();
+            }
+
             return new StudentDashboardViewModel
             {
                 StudentId = studentId,
                 StudentName = student.FullName,
                 RegistrationNumber = student.RegistrationNumber ?? "",
+                Email = student.Email,
+                CurrentSession = currentSession,
+                SectionName = sectionName,
                 EnrolledCourses = summary.CourseAttendances,
                 OverallAttendancePercentage = summary.OverallAttendancePercentage,
-                TodaysStatus = todaysAttendance?.Status
+                TodaysStatus = todaysAttendance?.Status,
+                TodaysTimetable = todaysTimetable
             };
         }
 

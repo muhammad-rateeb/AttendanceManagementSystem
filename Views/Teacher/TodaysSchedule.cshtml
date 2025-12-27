@@ -1,0 +1,119 @@
+@model List<AttendanceManagementSystem.Models.ViewModels.TimetableAttendanceViewModel>
+@{
+    ViewData["Title"] = "Today's Schedule";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-calendar-check"></i> Today's Schedule</h2>
+            <p class="text-muted mb-0">@DateTime.Today.DayOfWeek, @DateTime.Today.ToString("MMMM dd, yyyy")</p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> <strong>Note:</strong> You can only mark attendance within the first <strong>10 minutes</strong> of the lecture start time.
+    </div>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 @(item.CanMarkAttendance ? "border-success" : item.AttendanceStatus == "Upcoming" ? "border-warning" : "border-secondary")">
+                    <div class="card-header @(item.CanMarkAttendance ? "bg-success text-white" : item.AttendanceStatus == "Upcoming" ? "bg-warning" : "bg-secondary text-white")">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">@item.CourseCode</h5>
+                            @if (item.AttendanceStatus == "Open")
+                            {
+                                <span class="badge bg-light text-success">
+                                    <i class="bi bi-unlock"></i> Open (@item.MinutesRemaining min left)
+                                </span>
+                            }
+                            else if (item.AttendanceStatus == "Upcoming")
+                            {
+                                <span class="badge bg-light text-warning">
+                                    <i class="bi bi-clock"></i> In @item.MinutesRemaining min
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-secondary">
+                                    <i class="bi bi-lock"></i> Closed
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">@item.CourseName</h6>
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="bi bi-diagram-3 text-primary"></i> Section: <strong>@item.SectionName</strong></li>
+                            <li><i class="bi bi-clock text-primary"></i> Time: <strong>@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")</strong></li>
+                            @if (!string.IsNullOrEmpty(item.RoomNumber))
+                            {
+                                <li><i class="bi bi-geo-alt text-primary"></i> Room: <strong>@item.RoomNumber</strong></li>
+                            }
+                        </ul>
+
+                        @if (item.CanMarkAttendance)
+                        {
+                            <a asp-action="MarkTimetableAttendance" asp-route-timetableId="@item.TimetableId" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Mark Attendance Now
+                            </a>
+                        }
+                        else if (item.AttendanceStatus == "Upcoming")
+                        {
+                            <button class="btn btn-warning w-100" disabled>
+                                <i class="bi bi-hourglass-split"></i> Opens at @item.StartTime.ToString(@"hh\:mm")
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100" disabled>
+                                <i class="bi bi-lock"></i> Attendance Window Closed
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x display-1 text-muted"></i>
+            <h4 class="text-muted mt-3">No classes scheduled for today</h4>
+            <p class="text-muted">You don't have any lectures scheduled for @DateTime.Today.DayOfWeek.</p>
+            <a asp-action="MyCourses" class="btn btn-primary mt-2">
+                <i class="bi bi-book"></i> View My Courses
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh every minute to update countdown
+        setTimeout(function() {
+            location.reload();
+        }, 60000);
+    </script>
+}

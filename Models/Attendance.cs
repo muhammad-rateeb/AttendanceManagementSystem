@@ -38,6 +38,9 @@ namespace AttendanceManagementSystem.Models
         [Display(Name = "Marked By")]
         public string MarkedById { get; set; } = string.Empty;
 
+        [Display(Name = "Timetable")]
+        public int? TimetableId { get; set; }
+
         [Required]
         [Display(Name = "Date")]
         [DataType(DataType.Date)]
@@ -64,5 +67,8 @@ namespace AttendanceManagementSystem.Models
 
         [ForeignKey("MarkedById")]
         public virtual ApplicationUser MarkedBy { get; set; } = null!;
+
+        [ForeignKey("TimetableId")]
+        public virtual Timetable? Timetable { get; set; }
     }
 }

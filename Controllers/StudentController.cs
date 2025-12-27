@@ -4,6 +4,7 @@ using AttendanceManagementSystem.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AttendanceManagementSystem.Controllers
 {
@@ -207,6 +208,122 @@ namespace AttendanceManagementSystem.Controllers
             }
 
             return BadRequest("Invalid format specified");
+        }
+
+        // GET: /Student/Profile
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Get student's enrollments with course and teacher info
+            var enrollments = await _courseService.GetContext().Enrollments
+                .Include(e => e.Course)
+                    .ThenInclude(c => c.TeacherCourses)
+                        .ThenInclude(tc => tc.Teacher)
+                .Include(e => e.Section)
+                .Include(e => e.Course.Session)
+                .Where(e => e.StudentId == user.Id && e.IsActive)
+                .ToListAsync();
+
+            var courseTeachers = enrollments.Select(e => new CourseTeacherInfo
+            {
+                CourseCode = e.Course.CourseCode,
+                CourseName = e.Course.CourseName,
+                TeacherName = e.Course.TeacherCourses.FirstOrDefault(tc => tc.IsActive)?.Teacher.FullName ?? "Not Assigned",
+                TeacherEmail = e.Course.TeacherCourses.FirstOrDefault(tc => tc.IsActive)?.Teacher.Email
+            }).ToList();
+
+            var summary = await _attendanceService.GetStudentAttendanceSummaryAsync(user.Id);
+            var sectionName = enrollments.FirstOrDefault()?.Section?.SectionName;
+            var currentSession = enrollments.FirstOrDefault()?.Course?.Session?.SessionName;
+
+            // Get current session if not found
+            if (string.IsNullOrEmpty(currentSession))
+            {
+                var activeSession = await _courseService.GetContext().Sessions
+                    .Where(s => s.IsCurrent && s.IsActive)
+                    .FirstOrDefaultAsync();
+                currentSession = activeSession?.SessionName;
+            }
+
+            var model = new StudentProfileViewModel
+            {
+                StudentId = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                RegistrationNumber = user.RegistrationNumber,
+                CurrentSession = currentSession,
+                SectionName = sectionName,
+                CreatedAt = user.CreatedAt,
+                EnrolledCoursesCount = enrollments.Count,
+                OverallAttendancePercentage = summary.OverallAttendancePercentage,
+                CourseTeachers = courseTeachers
+            };
+
+            return View(model);
+        }
+
+        // GET: /Student/MyTimetable
+        [HttpGet]
+        public async Task<IActionResult> MyTimetable()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            // Get student's section from enrollment
+            var enrollment = await _courseService.GetContext().Enrollments
+                .Include(e => e.Section)
+                .Where(e => e.StudentId == user.Id && e.IsActive && e.SectionId != null)
+                .FirstOrDefaultAsync();
+
+            var timetableItems = new List<StudentTimetableItem>();
+
+            if (enrollment?.SectionId != null)
+            {
+                var timetables = await _courseService.GetContext().Timetables
+                    .Include(t => t.Course)
+                    .Include(t => t.Section)
+                    .Include(t => t.Teacher)
+                    .Where(t => t.SectionId == enrollment.SectionId && t.IsActive)
+                    .OrderBy(t => t.DayOfWeek)
+                    .ThenBy(t => t.StartTime)
+                    .ToListAsync();
+
+                timetableItems = timetables.Select(t => new StudentTimetableItem
+                {
+                    TimetableId = t.TimetableId,
+                    CourseCode = t.Course.CourseCode,
+                    CourseName = t.Course.CourseName,
+                    TeacherName = t.Teacher.FullName,
+                    SectionName = t.Section.SectionName,
+                    DayOfWeek = t.DayOfWeek,
+                    StartTime = t.StartTime,
+                    EndTime = t.EndTime,
+                    RoomNumber = t.RoomNumber
+                }).ToList();
+            }
+
+            var model = new StudentTimetableViewModel
+            {
+                StudentName = user.FullName,
+                SectionName = enrollment?.Section?.SectionName,
+                Monday = timetableItems.Where(t => t.DayOfWeek == DayOfWeek.Monday).ToList(),
+                Tuesday = timetableItems.Where(t => t.DayOfWeek == DayOfWeek.Tuesday).ToList(),
+                Wednesday = timetableItems.Where(t => t.DayOfWeek == DayOfWeek.Wednesday).ToList(),
+                Thursday = timetableItems.Where(t => t.DayOfWeek == DayOfWeek.Thursday).ToList(),
+                Friday = timetableItems.Where(t => t.DayOfWeek == DayOfWeek.Friday).ToList(),
+                Saturday = timetableItems.Where(t => t.DayOfWeek == DayOfWeek.Saturday).ToList()
+            };
+
+            return View(model);
         }
     }
 }

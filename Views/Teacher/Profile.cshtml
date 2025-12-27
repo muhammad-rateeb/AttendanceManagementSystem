@@ -1,0 +1,145 @@
+@model AttendanceManagementSystem.Models.ViewModels.TeacherProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-person-circle me-2"></i>My Profile</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Personal Information</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle" style="font-size: 5rem; color: #6c757d;"></i>
+                    </div>
+                    <h4>@Model.FullName</h4>
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-envelope me-1"></i>@Model.Email
+                    </p>
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-credit-card me-1"></i>@(Model.EmployeeId ?? "N/A")
+                    </p>
+                    <hr />
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h5 class="text-primary">@Model.AssignedCoursesCount</h5>
+                            <small class="text-muted">Courses</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success">@Model.TotalStudents</h5>
+                            <small class="text-muted">Students</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Account Info</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        <strong><i class="bi bi-clock-history me-2"></i>Member Since:</strong><br />
+                        @Model.CreatedAt.ToString("MMMM dd, yyyy")
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-book me-2"></i>My Assigned Courses</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Courses.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Name</th>
+                                        <th>Students</th>
+                                        <th>Session</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var course in Model.Courses)
+                                    {
+                                        <tr>
+                                            <td><span class="badge bg-secondary">@course.CourseCode</span></td>
+                                            <td>@course.CourseName</td>
+                                            <td>
+                                                <span class="badge bg-primary">@course.EnrolledStudents</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@(course.SessionName ?? "N/A")</span>
+                                            </td>
+                                            <td>
+                                                <a asp-action="MarkAttendance" asp-route-courseId="@course.CourseId" 
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check2-square"></i>
+                                                </a>
+                                                <a asp-action="ViewAttendance" asp-route-courseId="@course.CourseId" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No courses assigned yet.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a asp-action="MyTimetable" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-calendar-week me-1"></i>My Timetable
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a asp-action="MySections" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-diagram-3 me-1"></i>My Sections
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a asp-action="TodaysSchedule" class="btn btn-outline-success w-100">
+                                <i class="bi bi-calendar-day me-1"></i>Today's Classes
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a asp-action="Reports" class="btn btn-outline-info w-100">
+                                <i class="bi bi-graph-up me-1"></i>Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
