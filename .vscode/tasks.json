@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run AttendanceManagementSystem",
+			"type": "shell",
+			"command": "dotnet run --project AttendanceManagementSystem/AttendanceManagementSystem.csproj",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
