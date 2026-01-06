@@ -346,14 +346,11 @@ namespace AttendanceManagementSystem.Controllers
                 .Select(e => e.Student)
                 .ToListAsync();
 
-            // If no section-specific enrollments, get all course enrollments
+            // No fallback: Only students enrolled in the correct section can be marked present
             if (!enrolledStudents.Any())
             {
-                enrolledStudents = await _context.Enrollments
-                    .Include(e => e.Student)
-                    .Where(e => e.CourseId == timetable.CourseId && e.IsActive)
-                    .Select(e => e.Student)
-                    .ToListAsync();
+                TempData["ErrorMessage"] = "No students are enrolled in this section for this course.";
+                return RedirectToAction("TodaysSchedule");
             }
 
             // Get existing attendance for today

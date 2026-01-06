@@ -73,17 +73,39 @@ namespace AttendanceManagementSystem.Services
 
         public async Task<bool> MarkAttendanceAsync(SubmitAttendanceViewModel model, string teacherId)
         {
+            // Enforce timetable and time checks
+            var today = model.AttendanceDate.DayOfWeek;
+            var currentTime = DateTime.Now.TimeOfDay;
+
+            // Find an active timetable for this course, teacher, and section (if available in model)
+            var timetable = await _context.Timetables
+                .Where(t => t.CourseId == model.CourseId
+                            && t.TeacherId == teacherId
+                            && t.DayOfWeek == today
+                            && t.IsActive)
+                .ToListAsync();
+
+            // If section info is available in model, filter further (optional, depends on your model)
+            // If you want to enforce section, add: && t.SectionId == model.SectionId
+
+            // Check if any timetable matches the current time window
+            var validTimetable = timetable.FirstOrDefault(t => currentTime >= t.StartTime && currentTime <= t.EndTime);
+            if (validTimetable == null)
+            {
+                // Not allowed to mark attendance outside scheduled class
+                return false;
+            }
+
             using var transaction = await _context.Database.BeginTransactionAsync();
-            
             try
             {
                 // Check for existing attendance and update or create
                 foreach (var entry in model.Entries)
                 {
                     var existingAttendance = await _context.Attendances
-                        .FirstOrDefaultAsync(a => 
-                            a.StudentId == entry.StudentId && 
-                            a.CourseId == model.CourseId && 
+                        .FirstOrDefaultAsync(a =>
+                            a.StudentId == entry.StudentId &&
+                            a.CourseId == model.CourseId &&
                             a.AttendanceDate.Date == model.AttendanceDate.Date);
 
                     if (existingAttendance != null)
@@ -105,7 +127,8 @@ namespace AttendanceManagementSystem.Services
                             AttendanceDate = model.AttendanceDate.Date,
                             Status = entry.Status,
                             Remarks = entry.Remarks,
-                            CreatedAt = DateTime.UtcNow
+                            CreatedAt = DateTime.UtcNow,
+                            TimetableId = validTimetable.TimetableId
                         };
                         await _context.Attendances.AddAsync(attendance);
                     }

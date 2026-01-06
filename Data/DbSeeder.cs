@@ -50,7 +50,7 @@ namespace AttendanceManagementSystem.Data
             await SeedTimetableAsync(context, userManager);
 
             // Clear and re-seed Attendance Records (fresh start)
-            await ClearAndReseedAttendanceAsync(context);
+            // await ClearAndReseedAttendanceAsync(context); // Disabled to preserve attendance data
         }
 
         private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
@@ -265,24 +265,32 @@ namespace AttendanceManagementSystem.Data
         {
             if (!await context.Enrollments.AnyAsync())
             {
-                var students = await userManager.GetUsersInRoleAsync("Student");
+                var students = (await userManager.GetUsersInRoleAsync("Student")).ToList();
                 var courses = await context.Courses.Take(3).ToListAsync();
-                var sectionA = await context.Sections.FirstOrDefaultAsync(s => s.SectionName == "Section A");
+                var sections = await context.Sections.OrderBy(s => s.SectionName).Take(3).ToListAsync();
 
                 var enrollments = new List<Enrollment>();
 
-                foreach (var student in students)
+                // Assign students to sections in round-robin fashion
+                for (int i = 0; i < students.Count; i++)
                 {
+                    var student = students[i];
+                    var section = sections[i % sections.Count];
                     foreach (var course in courses)
                     {
-                        enrollments.Add(new Enrollment
+                        // Ensure student is not already enrolled in this course (any section)
+                        bool alreadyEnrolled = enrollments.Any(e => e.StudentId == student.Id && e.CourseId == course.CourseId);
+                        if (!alreadyEnrolled)
                         {
-                            StudentId = student.Id,
-                            CourseId = course.CourseId,
-                            SectionId = sectionA?.SectionId, // Assign all students to Section A
-                            EnrollmentDate = DateTime.UtcNow.AddDays(-30),
-                            IsActive = true
-                        });
+                            enrollments.Add(new Enrollment
+                            {
+                                StudentId = student.Id,
+                                CourseId = course.CourseId,
+                                SectionId = section.SectionId,
+                                EnrollmentDate = DateTime.UtcNow.AddDays(-30),
+                                IsActive = true
+                            });
+                        }
                     }
                 }
 
@@ -291,7 +299,7 @@ namespace AttendanceManagementSystem.Data
             }
             else
             {
-                // Update existing enrollments with section if not set
+                // Update existing enrollments with section if not set (assign to Section A by default)
                 var sectionA = await context.Sections.FirstOrDefaultAsync(s => s.SectionName == "Section A");
                 if (sectionA != null)
                 {
@@ -331,144 +339,43 @@ namespace AttendanceManagementSystem.Data
                 var teacher2 = await userManager.FindByEmailAsync("teacher2@ams.edu.pk");
                 var teacher3 = await userManager.FindByEmailAsync("teacher3@ams.edu.pk");
 
+                var teachers = new[] { teacher1, teacher2, teacher3 };
                 var courses = await context.Courses.ToListAsync();
-                var sectionA = await context.Sections.FirstOrDefaultAsync(s => s.SectionName == "Section A");
+                var sections = await context.Sections.OrderBy(s => s.SectionName).Take(3).ToListAsync();
+                var days = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+                var startTimes = new[] { new TimeSpan(9, 0, 0), new TimeSpan(11, 0, 0), new TimeSpan(14, 0, 0) };
+                var roomNumbers = new[] { "Lab 1", "Room 101", "Room 102", "Room 103" };
 
-                if (teacher1 != null && teacher2 != null && teacher3 != null && courses.Any() && sectionA != null)
+                var timetables = new List<Timetable>();
+                int timetableIndex = 0;
+                foreach (var section in sections)
                 {
-                    var timetables = new List<Timetable>
+                    for (int c = 0; c < courses.Count; c++)
                     {
-                        // Monday Schedule for Section A
-                        new Timetable
+                        for (int d = 0; d < days.Length; d++)
                         {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-414")?.CourseId ?? courses[0].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher1.Id,
-                            DayOfWeek = DayOfWeek.Monday,
-                            StartTime = new TimeSpan(9, 0, 0),  // 9:00 AM
-                            EndTime = new TimeSpan(10, 30, 0),  // 10:30 AM
-                            RoomNumber = "Lab 1",
-                            IsActive = true
-                        },
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-412")?.CourseId ?? courses[1].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher1.Id,
-                            DayOfWeek = DayOfWeek.Monday,
-                            StartTime = new TimeSpan(11, 0, 0),  // 11:00 AM
-                            EndTime = new TimeSpan(12, 30, 0),  // 12:30 PM
-                            RoomNumber = "Room 101",
-                            IsActive = true
-                        },
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-410")?.CourseId ?? courses[2].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher2.Id,
-                            DayOfWeek = DayOfWeek.Monday,
-                            StartTime = new TimeSpan(14, 0, 0),  // 2:00 PM
-                            EndTime = new TimeSpan(15, 30, 0),  // 3:30 PM
-                            RoomNumber = "Room 102",
-                            IsActive = true
-                        },
-                        // Tuesday Schedule
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-414")?.CourseId ?? courses[0].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher1.Id,
-                            DayOfWeek = DayOfWeek.Tuesday,
-                            StartTime = new TimeSpan(9, 0, 0),
-                            EndTime = new TimeSpan(10, 30, 0),
-                            RoomNumber = "Lab 1",
-                            IsActive = true
-                        },
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-416")?.CourseId ?? courses[3].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher3.Id,
-                            DayOfWeek = DayOfWeek.Tuesday,
-                            StartTime = new TimeSpan(11, 0, 0),
-                            EndTime = new TimeSpan(12, 30, 0),
-                            RoomNumber = "Room 103",
-                            IsActive = true
-                        },
-                        // Wednesday Schedule
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-412")?.CourseId ?? courses[1].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher1.Id,
-                            DayOfWeek = DayOfWeek.Wednesday,
-                            StartTime = new TimeSpan(9, 0, 0),
-                            EndTime = new TimeSpan(10, 30, 0),
-                            RoomNumber = "Room 101",
-                            IsActive = true
-                        },
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-410")?.CourseId ?? courses[2].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher2.Id,
-                            DayOfWeek = DayOfWeek.Wednesday,
-                            StartTime = new TimeSpan(14, 0, 0),
-                            EndTime = new TimeSpan(15, 30, 0),
-                            RoomNumber = "Room 102",
-                            IsActive = true
-                        },
-                        // Thursday Schedule
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-414")?.CourseId ?? courses[0].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher1.Id,
-                            DayOfWeek = DayOfWeek.Thursday,
-                            StartTime = new TimeSpan(10, 0, 0),
-                            EndTime = new TimeSpan(11, 30, 0),
-                            RoomNumber = "Lab 1",
-                            IsActive = true
-                        },
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-416")?.CourseId ?? courses[3].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher3.Id,
-                            DayOfWeek = DayOfWeek.Thursday,
-                            StartTime = new TimeSpan(14, 0, 0),
-                            EndTime = new TimeSpan(15, 30, 0),
-                            RoomNumber = "Room 103",
-                            IsActive = true
-                        },
-                        // Friday Schedule
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-412")?.CourseId ?? courses[1].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher1.Id,
-                            DayOfWeek = DayOfWeek.Friday,
-                            StartTime = new TimeSpan(9, 0, 0),
-                            EndTime = new TimeSpan(10, 30, 0),
-                            RoomNumber = "Room 101",
-                            IsActive = true
-                        },
-                        new Timetable
-                        {
-                            CourseId = courses.FirstOrDefault(c => c.CourseCode == "CSC-410")?.CourseId ?? courses[2].CourseId,
-                            SectionId = sectionA.SectionId,
-                            TeacherId = teacher2.Id,
-                            DayOfWeek = DayOfWeek.Friday,
-                            StartTime = new TimeSpan(11, 0, 0),
-                            EndTime = new TimeSpan(12, 30, 0),
-                            RoomNumber = "Room 102",
-                            IsActive = true
+                            var teacher = teachers[(c + d + timetableIndex) % teachers.Length];
+                            var startTime = startTimes[c % startTimes.Length];
+                            var endTime = startTime.Add(new TimeSpan(1, 30, 0));
+                            var room = roomNumbers[(c + d) % roomNumbers.Length];
+                            timetables.Add(new Timetable
+                            {
+                                CourseId = courses[c].CourseId,
+                                SectionId = section.SectionId,
+                                TeacherId = teacher?.Id ?? string.Empty,
+                                DayOfWeek = days[d],
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                RoomNumber = room,
+                                IsActive = true
+                            });
                         }
-                    };
-
-                    await context.Timetables.AddRangeAsync(timetables);
-                    await context.SaveChangesAsync();
+                    }
+                    timetableIndex++;
                 }
+
+                await context.Timetables.AddRangeAsync(timetables);
+                await context.SaveChangesAsync();
             }
         }
 
